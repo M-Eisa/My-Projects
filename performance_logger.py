@@ -1,57 +1,76 @@
 import time
 import psutil
-import csv
 import matplotlib
 import matplotlib.pyplot as plt
+from matplotlib.animation import FuncAnimation
 
 matplotlib.use('TkAgg')
 
-def log_performance(duration=60, interval=1, log_file="cpu_memory_log.csv"):
-    """Logs CPU and memory usage over a set duration."""
-    with open(log_file, "w", newline="") as csvfile:
-        writer = csv.writer(csvfile)
-        writer.writerow(["Time", "CPU Usage (%)", "Memory Usage (MB)"])
-        start_time = time.time()
+# Global variables to store the data
+times = []
+cpu_usages = []
+mem_usages = []
 
-        try:
-            print("Logging performance data... Press Ctrl+C to stop.")
-            while time.time() - start_time < duration:
-                cpu_usage = psutil.cpu_percent(interval=0.5)
-                mem_usage = psutil.virtual_memory().used / 1e6  # Convert to MB
-                elapsed_time = time.time() - start_time
+def log_performance(duration=60, interval=1):
+    """Logs CPU and memory usage over a set duration and updates the plot in real-time."""
+    start_time = time.time()
 
-                writer.writerow([elapsed_time, cpu_usage, mem_usage])
-                print(f"Time: {elapsed_time:.2f}s | CPU: {cpu_usage}% | Memory: {mem_usage:.2f} MB", end="\r")
-                time.sleep(interval)
-        except KeyboardInterrupt:
-            print("\nLogging stopped.")
+    def update_plot(frame):
+        # Collect data every interval
+        cpu_usage = psutil.cpu_percent(interval=0.5)
+        mem_usage = psutil.virtual_memory().used / 1e6  # Convert to MB
+        elapsed_time = time.time() - start_time
 
-def plot_performance(log_file="cpu_memory_log.csv"):
-    """Plots CPU and memory usage over time from log file."""
-    times, cpu_usages, mem_usages = [], [], []
+        # Store data in the global lists
+        times.append(elapsed_time)
+        cpu_usages.append(cpu_usage)
+        mem_usages.append(mem_usage)
 
-    with open(log_file, "r") as csvfile:
-        reader = csv.reader(csvfile)
-        next(reader)  # Skip headers
-        for row in reader:
-            times.append(float(row[0]))
-            cpu_usages.append(float(row[1]))
-            mem_usages.append(float(row[2]))
+        # Limit the data to the duration
+        if len(times) > duration:
+            times.pop(0)
+            cpu_usages.pop(0)
+            mem_usages.pop(0)
 
-    plt.figure(figsize=(10, 5))
-    plt.subplot(2, 1, 1)
-    plt.plot(times, cpu_usages, label='CPU Usage (%)', color='red')
-    plt.ylabel('CPU Usage (%)')
-    plt.legend()
+        # Update the plot
+        line_cpu.set_data(times, cpu_usages)
+        line_mem.set_data(times, mem_usages)
 
-    plt.subplot(2, 1, 2)
-    plt.plot(times, mem_usages, label='Memory Usage (MB)', color='blue')
-    plt.xlabel('Time (s)')
-    plt.ylabel('Memory Usage (MB)')
-    plt.legend()
+        # Update the axes limits
+        ax_cpu.relim()
+        ax_cpu.autoscale_view()
+        ax_mem.relim()
+        ax_mem.autoscale_view()
+
+        # Dynamically adjust y-limits of memory plot if necessary
+        ax_mem.set_ylim(0, max(mem_usages) * 1.2)
+
+        return line_cpu, line_mem
+
+    # Set up the plot
+    fig, (ax_cpu, ax_mem) = plt.subplots(2, 1, figsize=(10, 6))
+
+    ax_cpu.set_title('CPU Usage (%)')
+    ax_cpu.set_xlim(0, duration)  # Limit x-axis to the duration
+    ax_cpu.set_ylim(0, 100)
+    line_cpu, = ax_cpu.plot([], [], label='CPU Usage (%)', color='red')
+    ax_cpu.set_ylabel('CPU Usage (%)')
+    ax_cpu.legend()
+
+    ax_mem.set_title('Memory Usage (MB)')
+    ax_mem.set_xlim(0, duration)  # Limit x-axis to the duration
+    ax_mem.set_ylim(0, 16)  # Set initial y-limits for memory
+    line_mem, = ax_mem.plot([], [], label='Memory Usage (MB)', color='blue')
+    ax_mem.set_xlabel('Time (s)')
+    ax_mem.set_ylabel('Memory Usage (MB)')
+    ax_mem.legend()
+
+    # Create the animation
+    ani = FuncAnimation(fig, update_plot, interval=1000, blit=True, cache_frame_data=False)
+
+    # Display the plot
     plt.tight_layout()
     plt.show()
 
 if __name__ == "__main__":
-    log_performance(duration=30)  # Run for 30 seconds
-    plot_performance()
+    log_performance(duration=60, interval=1)  # Run for 60 seconds
