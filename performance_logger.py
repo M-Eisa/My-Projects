@@ -5,6 +5,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 
 matplotlib.use('TkAgg')
+
 def log_performance(duration=60, interval=1, log_file="cpu_memory_log.csv"):
     """Logs CPU and memory usage over a set duration."""
     with open(log_file, "w", newline="") as csvfile:
