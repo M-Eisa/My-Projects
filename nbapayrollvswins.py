@@ -47,11 +47,11 @@ data = {
         53, 44, 42, 33, 51, 49, 51, 53, 25, 48, 46, 51, 64, 44, 46, 36, 43, 48, 20, 23,
         30, 35, 34, 22, 52, 27, 43, 37, 56, 24,
 
-        # 2020-2021 season (wins adjusted due to shortened season)
+        # 2020-2021 season 
         44, 55, 56, 54, 48, 59, 52, 46, 35, 41, 43, 48, 19, 39, 26, 39, 54, 25, 38, 31,
         35, 58, 48, 24, 47, 23, 38, 35, 47, 25,
 
-        # 2019-2020 season (wins adjusted due to shortened season)
+        # 2019-2020 season 
         49, 39, 55, 21, 48, 49, 17, 52, 49, 37, 58, 63, 60, 28, 48, 36, 49, 39, 34, 54,
         21, 35, 51, 25, 22, 22, 24, 38, 38, 26
 
@@ -80,8 +80,8 @@ plt.title('Correlation Between NBA Team Payroll and Wins')
 plt.xlabel('Team Payroll (in dollars)')
 plt.ylabel('Team Wins')
 
-# Set x-axis range to [80M, 220M]
-plt.xlim(80000000, 220000000)  # Set the x-axis limits from 80M to 220M
+# Set the x-axis limits from 80M to 220M
+plt.xlim(80000000, 220000000)  
 
 # Format the x-axis to display values in millions
 x_ticks = np.arange(80000000, 220000000, 20000000)
