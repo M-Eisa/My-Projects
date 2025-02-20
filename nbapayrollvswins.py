@@ -1,10 +1,12 @@
-import matplotlib
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sns
-
-matplotlib.use('TkAgg')
+import plotly.express as px
+import webbrowser
+import logging
+import dash
+from dash import dcc
+from dash import html
+from dash.dependencies import Input, Output
 
 # Define dataset with NBA team payroll and wins data
 data = {
@@ -47,49 +49,54 @@ data = {
         53, 44, 42, 33, 51, 49, 51, 53, 25, 48, 46, 51, 64, 44, 46, 36, 43, 48, 20, 23,
         30, 35, 34, 22, 52, 27, 43, 37, 56, 24,
 
-        # 2020-2021 season 
+        # 2020-2021 season
         44, 55, 56, 54, 48, 59, 52, 46, 35, 41, 43, 48, 19, 39, 26, 39, 54, 25, 38, 31,
         35, 58, 48, 24, 47, 23, 38, 35, 47, 25,
 
-        # 2019-2020 season 
+        # 2019-2020 season
         49, 39, 55, 21, 48, 49, 17, 52, 49, 37, 58, 63, 60, 28, 48, 36, 49, 39, 34, 54,
         21, 35, 51, 25, 22, 22, 24, 38, 38, 26
-
+    ]),
+    'season': np.array([
+        *['2023-2024'] * 30,
+        *['2022-2023'] * 30,
+        *['2021-2022'] * 30,
+        *['2020-2021'] * 30,
+        *['2019-2020'] * 30
     ])
 }
 
-# Create a DataFrame from the dataset
 df = pd.DataFrame(data)
 
-# Check for missing values
-print("Missing values:")
-print(df.isnull().sum())
+app = dash.Dash(__name__)
+app.layout = html.Div([
+    dcc.Dropdown(
+        id='season-dropdown',
+        options=[{'label': season, 'value': season} for season in df['season'].unique()] + [{'label': 'All Seasons', 'value': 'All'}],
+        value='All',
+        clearable=False
+    ),
+    dcc.Graph(id='scatter-plot')
+])
 
-# Display the data types of the columns
-print("\nData Types:")
-print(df.dtypes)
+@app.callback(
+    Output('scatter-plot', 'figure'),
+    Input('season-dropdown', 'value')
+)
+def update_graph(selected_season):
+    filtered_df = df if selected_season == 'All' else df[df['season'] == selected_season]
+    fig = px.scatter(
+        filtered_df, x='team_payroll', y='wins',
+        title=f'NBA Team Payroll vs Wins ({selected_season if selected_season != "All" else "All Seasons"})',
+        labels={'team_payroll': 'Team Payroll (USD)', 'wins': 'Wins'}
+    )
+    return fig
 
-# Compute and display correlation coefficient
-correlation = np.corrcoef(df['team_payroll'], df['wins'])[0, 1]
-print(f"\nCorrelation coefficient: {correlation:.4f}")
+if __name__ == '__main__':
+    url = "http://127.0.0.1:8050/"
+    print(f"Dash app is running. If the browser does not open automatically, click here: {url}")
+    webbrowser.open(url)
+    log = logging.getLogger('werkzeug')
+    log.setLevel(logging.ERROR)
+    app.run_server(debug=False)
 
-# Create a scatter plot to visualize the relationship between payroll and wins
-plt.figure(figsize=(10,6))
-sns.scatterplot(x=df['team_payroll'], y=df['wins'])
-plt.title('Correlation Between NBA Team Payroll and Wins')
-plt.xlabel('Team Payroll (in dollars)')
-plt.ylabel('Team Wins')
-
-# Set the x-axis limits from 80M to 220M
-plt.xlim(80000000, 220000000)  
-
-# Format the x-axis to display values in millions
-x_ticks = np.arange(80000000, 220000000, 20000000)
-plt.xticks(ticks=x_ticks, labels=(x_ticks // 1_000_000).astype(str))
-
-# Format x-axis labels
-plt.gca().tick_params(axis='x', labelsize=10)
-plt.xlabel('Team Payroll (in millions)')
-
-# Display the plot
-plt.show()
