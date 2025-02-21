@@ -139,7 +139,7 @@ screen = pygame.display.set_mode(size)
 
 pygame.display.set_caption("Tetris")
 
-# Loop until the user clicks the close button.
+# Loop until the user clicks the close button
 done = False
 clock = pygame.time.Clock()
 fps = 25
