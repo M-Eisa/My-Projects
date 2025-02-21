@@ -1,9 +1,10 @@
 import os
 import json
 import matplotlib
-matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from datetime import datetime
+
+matplotlib.use('Agg')
 
 class ExpenseTracker:
     def __init__(self, file_name="expenses.json"):
