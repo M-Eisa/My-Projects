@@ -76,9 +76,13 @@ data = {
     ])
 }
 
+# Convert the data dictionary to a pandas DataFrame for easier manipulation
 df = pd.DataFrame(data)
 
+# Initialize the Dash app
 app = dash.Dash(__name__)
+
+# Define the layout of the Dash app using a Div container
 app.layout = html.Div([
     dcc.Dropdown(
         id='season-dropdown',
@@ -89,10 +93,13 @@ app.layout = html.Div([
     dcc.Graph(id='scatter-plot')
 ])
 
+# Callback function to update the scatter plot based on the selected season from the dropdown menu
 @app.callback(
     Output('scatter-plot', 'figure'),
     Input('season-dropdown', 'value')
 )
+
+# Generate a scatter plot of team payroll vs wins, filtering data by the selected season
 def update_graph(selected_season):
     filtered_df = df if selected_season == 'All' else df[df['season'] == selected_season]
     fig = px.scatter(
@@ -102,6 +109,7 @@ def update_graph(selected_season):
     )
     return fig
 
+# Start the Dash server, open the app in a web browser, and suppress default werkzeug logs
 if __name__ == '__main__':
     url = "http://127.0.0.1:8050/"
     print(f"Dash app is running. If the browser does not open automatically, click here: {url}")
