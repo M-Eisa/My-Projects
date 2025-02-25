@@ -4,7 +4,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 
-matplotlib.use('TkAgg')
+matplotlib.use('QtAgg')
 
 # Global variables to store the data
 times = []
