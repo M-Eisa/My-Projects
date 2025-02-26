@@ -160,5 +160,9 @@ END$$
 
 DELIMITER ;
 
--- Use the Stored Procedure to Hire a New Employee
+-- Use the Stored Procedure to Hire New Employees
 CALL HireEmployee('David', 'Smith', 2, 2, 90000);
+CALL HireEmployee('Emily', 'Johnson', 1, 1, 65000);
+CALL HireEmployee('Michael', 'Brown', 3, 3, 55000);
+CALL HireEmployee('Sarah', 'Davis', 4, 4, 60000);
+CALL HireEmployee('James', 'Wilson', 2, 2, 88000);
