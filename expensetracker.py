@@ -4,7 +4,8 @@ import matplotlib
 import matplotlib.pyplot as plt
 from datetime import datetime
 
-matplotlib.use('Agg')
+# Use PyQt-based backend for interactive plots
+matplotlib.use('QtAgg')
 
 class ExpenseTracker:
     def __init__(self, file_name="expenses.json"):
@@ -40,7 +41,7 @@ class ExpenseTracker:
             amount = float(expense['amount'])
             categories[category] = categories.get(category, 0) + amount
 
-        # Visualization
+        # Display plot
         plt.figure(figsize=(8, 6))
         plt.bar(categories.keys(), categories.values(), color='skyblue')
         plt.xlabel('Categories')
@@ -48,11 +49,7 @@ class ExpenseTracker:
         plt.title('Expenses by Category')
         plt.xticks(rotation=45)
         plt.tight_layout()
-        plt.savefig('report.png')  # Save plot to a file
-        print("Report saved as 'report.png'")
-
-
-
+        plt.show()
 
 if __name__ == "__main__":
     tracker = ExpenseTracker()
