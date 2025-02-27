@@ -1,5 +1,6 @@
 import pandas as pd
 import plotly.express as px
+import numpy as np
 import webbrowser
 import logging
 import dash
@@ -98,6 +99,9 @@ for season, season_data in data.items():
 
 df = pd.concat(df_list, ignore_index=True)
 
+# Calculate correlation between payroll and wins
+correlation = np.corrcoef(df['team_payroll'], df['wins'])[0, 1]
+
 # Initialize the Dash app
 app = dash.Dash(__name__)
 
@@ -140,6 +144,7 @@ def update_graph(selected_season):
 if __name__ == '__main__':
     url = "http://127.0.0.1:8050/"
     print(f"Dash app is running. If the browser does not open automatically, click here: {url}")
+    print(f'Correlation between team payroll and wins: {correlation:.2f}')
     webbrowser.open(url)
     log = logging.getLogger('werkzeug')
     log.setLevel(logging.ERROR)
