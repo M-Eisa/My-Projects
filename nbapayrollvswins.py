@@ -9,6 +9,7 @@ from dash import dcc
 from dash import html
 from dash.dependencies import Input, Output, State
 import dash_bootstrap_components as dbc
+from sklearn.linear_model import LinearRegression
 
 # Define dataset with NBA team payroll, wins data, and team names for each season
 data = {
@@ -118,17 +119,22 @@ for season in df['season'].unique():
 # Calculate overall correlation
 overall_correlation = np.corrcoef(df['team_payroll'], df['wins'])[0, 1]
 
-# Define light theme styles
-light_theme = {
-    'graph_bg': 'white',
+# Define modern theme styles
+modern_theme = {
+    'graph_bg': '#f8f9fa',
     'paper_bg': 'white',
-    'grid_color': 'lightgray',
-    'text_color': 'black',
+    'grid_color': '#e9ecef',
+    'text_color': '#343a40',
     'bg_color': 'white',
     'card_bg': 'white',
-    'card_header_bg': '#f8f9fa',  # Light gray header background
-    'card_header_text': 'black',  # Black text for header
-    'table_style': {'striped': True, 'bordered': True, 'hover': True, 'responsive': True, 'className': 'table-sm'},
+    'card_header_bg': '#f8f9fa',
+    'card_header_text': '#343a40',
+    'table_style': {'striped': True, 'bordered': False, 'hover': True, 'responsive': True, 'className': 'table-sm'},
+    'primary_color': '#4361ee',
+    'secondary_color': '#3f37c9',
+    'accent_color': '#4895ef',
+    'hover_box_bg': 'rgba(255, 255, 255, 0.95)',
+    'hover_box_border': '#4895ef'
 }
 
 # Initialize the Dash app with Bootstrap for styling
@@ -143,9 +149,11 @@ app.layout = html.Div([
             dbc.Col([
                 html.Div([
                     html.H1("NBA Team Payroll vs. Performance Analysis",
-                            className="text-center my-4 text-dark"),
+                            className="text-center my-4",
+                            style={'color': modern_theme['text_color'], 'font-weight': '600'}),
                     html.P("An analysis of how NBA team payrolls impact season performance",
-                           className="text-center mb-4 text-secondary"),
+                           className="text-center mb-4",
+                           style={'color': '#6c757d', 'font-weight': '300'})
                 ], className="dashboard-header")
             ], width=12)
         ]),
@@ -154,19 +162,24 @@ app.layout = html.Div([
             dbc.Col([
                 dbc.Card([
                     dbc.CardHeader("Filters",
-                                   className="text-dark bg-light"),  # Light background, dark text
+                                   className="text-dark",
+                                   style={'background-color': modern_theme['card_header_bg'],
+                                          'border-bottom': 'none',
+                                          'font-weight': '500',
+                                          'border-radius': '12px 12px 0 0'}),
                     dbc.CardBody([
-                        html.Label("Select Season:"),
+                        html.Label("Select Season:", style={'font-weight': '500', 'color': modern_theme['text_color']}),
                         dcc.Dropdown(
                             id='season-dropdown',
                             options=[{'label': season, 'value': season} for season in sorted(df['season'].unique(), reverse=True)] +
                                     [{'label': 'All Seasons', 'value': 'All'}],
                             value='All',
                             clearable=False,
-                            className="mb-3"
+                            className="mb-3",
+                            style={'border-radius': '8px'}
                         ),
 
-                        html.Label("Select Team(s):"),
+                        html.Label("Select Team(s):", style={'font-weight': '500', 'color': modern_theme['text_color']}),
                         dcc.Dropdown(
                             id='team-dropdown',
                             options=[{'label': team, 'value': team} for team in unique_teams],
@@ -174,10 +187,11 @@ app.layout = html.Div([
                             clearable=True,
                             multi=True,
                             className="mb-3",
-                            placeholder="Select teams or leave empty for all teams"
+                            placeholder="Select teams or leave empty for all teams",
+                            style={'border-radius': '8px'}
                         ),
 
-                        html.Label("View Mode:"),
+                        html.Label("View Mode:", style={'font-weight': '500', 'color': modern_theme['text_color']}),
                         dbc.RadioItems(
                             id='view-mode',
                             options=[
@@ -189,19 +203,24 @@ app.layout = html.Div([
                             className="mb-3"
                         ),
 
-                        html.Div(id="correlation-display", className="mt-3 p-2 border rounded bg-light"),
-                    ])
-                ], className="mb-4 shadow-sm")
+                        html.Div(id="correlation-display", className="mt-3 p-3 border rounded",
+                                 style={'border-radius': '10px', 'border-color': '#dee2e6', 'background-color': '#f8f9fa'})
+                    ], style={'padding': '1.25rem'})
+                ], className="mb-4 shadow-sm", style={'border-radius': '12px', 'border': 'none'})
             ], width=3),
 
             dbc.Col([
                 dbc.Card([
                     dbc.CardHeader("Visualization",
-                                   className="text-dark bg-light"),  # Light background, dark text
+                                   className="text-dark",
+                                   style={'background-color': modern_theme['card_header_bg'],
+                                          'border-bottom': 'none',
+                                          'font-weight': '500',
+                                          'border-radius': '12px 12px 0 0'}),
                     dbc.CardBody([
                         dcc.Graph(id='main-graph', style={'height': '60vh'})
-                    ])
-                ], className="mb-4 shadow-sm")
+                    ], style={'padding': '1.25rem'})
+                ], className="mb-4 shadow-sm", style={'border-radius': '12px', 'border': 'none'})
             ], width=9)
         ]),
 
@@ -209,11 +228,15 @@ app.layout = html.Div([
             dbc.Col([
                 dbc.Card([
                     dbc.CardHeader("Team Performance Table",
-                                   className="text-dark bg-light"),  # Light background, dark text
+                                   className="text-dark",
+                                   style={'background-color': modern_theme['card_header_bg'],
+                                          'border-bottom': 'none',
+                                          'font-weight': '500',
+                                          'border-radius': '12px 12px 0 0'}),
                     dbc.CardBody([
                         html.Div(id="table-container", style={"maxHeight": "300px", "overflow": "auto"})
-                    ])
-                ], className="shadow-sm")
+                    ], style={'padding': '1.25rem'})
+                ], className="shadow-sm", style={'border-radius': '12px', 'border': 'none'})
             ], width=12)
         ]),
 
@@ -221,12 +244,12 @@ app.layout = html.Div([
             dbc.Col([
                 html.Footer([
                     html.P("Data source: HoopsHype (Salaries) and NBA.com (Standings)",
-                           className="text-center text-muted mt-4 mb-4")
+                           className="text-center mt-4 mb-4", style={'color': '#6c757d', 'font-size': '0.9rem'})
                 ])
             ], width=12)
         ])
     ], fluid=True, className="p-4")
-], style={'background-color': light_theme['bg_color'], 'min-height': '100vh', 'color': light_theme['text_color']})
+], style={'background-color': modern_theme['bg_color'], 'min-height': '100vh', 'color': modern_theme['text_color']})
 
 # Callback to update the correlation display
 @app.callback(
@@ -244,28 +267,33 @@ def update_correlation(selected_season):
     # Interpretation message
     if correlation > 0.7:
         interpretation = "Strong positive correlation"
+        icon_color = "#198754"  # success green
     elif correlation > 0.4:
         interpretation = "Moderate positive correlation"
+        icon_color = "#0dcaf0"  # info blue
     elif correlation > 0.1:
         interpretation = "Weak positive correlation"
+        icon_color = "#0d6efd"  # primary blue
     elif correlation > -0.1:
         interpretation = "No significant correlation"
+        icon_color = "#6c757d"  # gray
     else:
         interpretation = "Negative correlation"
+        icon_color = "#dc3545"  # danger red
 
     # Add an icon based on correlation strength
     if correlation > 0.4:
-        icon = html.I(className="fas fa-arrow-trend-up me-2 text-success")
+        icon = html.I(className="fas fa-arrow-trend-up me-2", style={"color": icon_color})
     elif correlation > 0.1:
-        icon = html.I(className="fas fa-arrow-trend-up me-2 text-info")
+        icon = html.I(className="fas fa-arrow-trend-up me-2", style={"color": icon_color})
     elif correlation > -0.1:
-        icon = html.I(className="fas fa-minus me-2 text-warning")
+        icon = html.I(className="fas fa-minus me-2", style={"color": icon_color})
     else:
-        icon = html.I(className="fas fa-arrow-trend-down me-2 text-danger")
+        icon = html.I(className="fas fa-arrow-trend-down me-2", style={"color": icon_color})
 
     return html.Div([
-        html.P(message, className="mb-1"),
-        html.P([icon, interpretation], className="font-weight-bold")
+        html.P(message, className="mb-1", style={"font-weight": "400"}),
+        html.P([icon, interpretation], className="mb-0", style={"font-weight": "500"})
     ])
 
 # Callback to update the main graph based on filters
@@ -309,23 +337,23 @@ def update_graph(selected_season, selected_teams, view_mode):
         )
 
         fig.update_traces(
-            hovertemplate='%{x}<br>Season: %{customdata[0]}<br>Efficiency: %{y:.2f} wins/$M<br>Wins: %{customdata[1]}<br>Payroll: $%{customdata[2]:,.0f}<extra></extra>'
+            hovertemplate='<b>%{x}</b><br>Season: %{customdata[0]}<br>Efficiency: %{y:.2f} wins/$M<br>Wins: %{customdata[1]}<br>Payroll: $%{customdata[2]:,.0f}<extra></extra>'
         )
 
         fig.update_layout(
             xaxis={'categoryorder': 'total descending'},
             yaxis_title="Wins per $Million",
             xaxis_title="",
-            plot_bgcolor=light_theme['graph_bg'],
-            paper_bgcolor=light_theme['paper_bg'],
-            font=dict(color=light_theme['text_color'])
+            plot_bgcolor=modern_theme['graph_bg'],
+            paper_bgcolor=modern_theme['paper_bg'],
+            font=dict(color=modern_theme['text_color'])
         )
 
     else:
         # Default payroll vs wins view
         fig = go.Figure()
 
-        marker_color = 'royalblue'
+        marker_color = modern_theme['primary_color']
 
         # Add scatter points
         if selected_season == 'All':
@@ -341,7 +369,7 @@ def update_graph(selected_season, selected_teams, view_mode):
                     marker=dict(
                         size=12,
                         color=colors[i % len(colors)],
-                        line=dict(width=1, color='black')
+                        line=dict(width=0)  # Removed black outline
                     ),
                     name=season,
                     customdata=np.stack((
@@ -349,7 +377,7 @@ def update_graph(selected_season, selected_teams, view_mode):
                         season_data['season'],
                         season_data['efficiency']
                     ), axis=-1),
-                    hovertemplate='%{customdata[0]}<br>Season: %{customdata[1]}<br>Payroll: $%{x:,.0f}<br>Wins: %{y}<br>Efficiency: %{customdata[2]:.2f} wins/$M<extra></extra>'
+                    hovertemplate='<b>%{customdata[0]}</b><br>Season: %{customdata[1]}<br>Payroll: $%{x:,.0f}<br>Wins: %{y}<br>Efficiency: %{customdata[2]:.2f} wins/$M<extra></extra>'
                 ))
         else:
             # Single color for single season
@@ -366,7 +394,8 @@ def update_graph(selected_season, selected_teams, view_mode):
                 marker=dict(
                     size=15,
                     color=marker_color,
-                    line=dict(width=1, color='black')
+                    opacity=0.85,
+                    line=dict(width=0)  # Removed black outline
                 ),
                 text=filtered_df['pure_team_name'] if highlight_teams and len(filtered_df) < 15 else None,
                 textposition='top center',
@@ -376,7 +405,7 @@ def update_graph(selected_season, selected_teams, view_mode):
                     filtered_df['season'],
                     filtered_df['efficiency']
                 ), axis=-1),
-                hovertemplate='%{customdata[0]}<br>Season: %{customdata[1]}<br>Payroll: $%{x:,.0f}<br>Wins: %{y}<br>Efficiency: %{customdata[2]:.2f} wins/$M<extra></extra>'
+                hovertemplate='<b>%{customdata[0]}</b><br>Season: %{customdata[1]}<br>Payroll: $%{x:,.0f}<br>Wins: %{y}<br>Efficiency: %{customdata[2]:.2f} wins/$M<extra></extra>'
             ))
 
         # Add trendline if there are enough data points
@@ -396,7 +425,7 @@ def update_graph(selected_season, selected_teams, view_mode):
                 x=x_trend,
                 y=y_trend,
                 mode='lines',
-                line=dict(color='red', dash='dash', width=2),
+                line=dict(color=modern_theme['secondary_color'], dash='dot', width=2),
                 name='Trend Line',
                 hoverinfo='skip'
             ))
@@ -406,14 +435,14 @@ def update_graph(selected_season, selected_teams, view_mode):
             title=f'NBA Team Payroll vs Wins ({selected_season if selected_season != "All" else "All Seasons"})',
             xaxis_title="Team Payroll (USD)",
             yaxis_title="Wins",
-            plot_bgcolor=light_theme['graph_bg'],
-            paper_bgcolor=light_theme['paper_bg'],
-            font=dict(color=light_theme['text_color'])
+            plot_bgcolor=modern_theme['graph_bg'],
+            paper_bgcolor=modern_theme['paper_bg'],
+            font=dict(color=modern_theme['text_color'])
         )
 
     # Common layout updates
     fig.update_layout(
-        font=dict(family="Montserrat", size=12, color=light_theme['text_color']),
+        font=dict(family="Montserrat, Arial, sans-serif", size=12, color=modern_theme['text_color']),
         margin=dict(l=40, r=40, t=60, b=40),
         legend=dict(
             orientation="h",
@@ -421,36 +450,60 @@ def update_graph(selected_season, selected_teams, view_mode):
             y=1.02,
             xanchor="right",
             x=1,
-            font=dict(color=light_theme['text_color']),
+            font=dict(color=modern_theme['text_color']),
             bgcolor='rgba(255,255,255,0.5)'
         ),
         title=dict(
             y=0.98,
             x=0.5,
             xanchor='center',
-            font=dict(size=16)
+            font=dict(size=16, family="Montserrat, Arial, sans-serif", color=modern_theme['text_color'])
+        ),
+        hoverlabel=dict(
+            bgcolor=modern_theme['hover_box_bg'],
+            bordercolor=modern_theme['hover_box_border'],
+            font=dict(family="Montserrat, Arial, sans-serif", size=12, color=modern_theme['text_color']),
+            # Add rounded corners to hover boxes
+            namelength=-1
         )
     )
 
-    # Add gridlines
+    # Set hover mode to closest for better hover experience
+    fig.update_layout(hovermode='closest')
+
+    # Add subtle gridlines
     fig.update_xaxes(
         showgrid=True,
         gridwidth=1,
-        gridcolor=light_theme['grid_color'],
+        gridcolor=modern_theme['grid_color'],
         showline=True,
         linewidth=1,
-        linecolor=light_theme['grid_color'],
-        mirror=True
+        linecolor=modern_theme['grid_color'],
+        mirror=True,
+        zeroline=False
     )
     fig.update_yaxes(
         showgrid=True,
         gridwidth=1,
-        gridcolor=light_theme['grid_color'],
+        gridcolor=modern_theme['grid_color'],
         showline=True,
         linewidth=1,
-        linecolor=light_theme['grid_color'],
-        mirror=True
+        linecolor=modern_theme['grid_color'],
+        mirror=True,
+        zeroline=False
     )
+
+    # Format hover templates for better appearance with curve edges (CSS is handled through config)
+    fig.update_layout(
+        hoverlabel=dict(
+            bgcolor=modern_theme['hover_box_bg'],
+            bordercolor=modern_theme['hover_box_border'],
+            font=dict(family="Montserrat, Arial, sans-serif", size=12, color=modern_theme['text_color']),
+        )
+    )
+
+    # Apply template (optional, helps with styling consistency)
+    fig.update_layout(template="plotly_white")
 
     return fig
 
@@ -482,35 +535,352 @@ def update_table(selected_season, selected_teams):
     # Format efficiency with 2 decimal places
     display_df['efficiency'] = display_df['efficiency'].apply(lambda x: f"{x:.2f}")
 
-    # Select and reorder columns for display
-    if selected_season == 'All':
-        display_columns = ['season', 'pure_team_name', 'team_payroll', 'wins', 'efficiency']
-        display_df = display_df[display_columns]
-        display_df.columns = ['Season', 'Team', 'Payroll', 'Wins', 'Wins per $Million']
-    else:
-        display_columns = ['pure_team_name', 'team_payroll', 'wins', 'efficiency']
-        display_df = display_df[display_columns]
-        display_df.columns = ['Team', 'Payroll', 'Wins', 'Wins per $Million']
+    # Sort by wins (descending) by default
+    display_df = display_df.sort_values('wins', ascending=False)
 
-    # Sort by wins in descending order
-    display_df = display_df.sort_values('Wins', ascending=False)
+    # Select and rename columns for display
+    display_df = display_df[['season', 'pure_team_name', 'team_payroll', 'wins', 'efficiency']]
+    display_df.columns = ['Season', 'Team', 'Payroll', 'Wins', 'Wins per $Million']
 
-    # Generate the table with light theme styling
+    # Create the table
     table = dbc.Table.from_dataframe(
         display_df,
         striped=True,
-        bordered=True,
+        bordered=False,
         hover=True,
         responsive=True,
-        className='table-sm'
+        className="table-sm"
     )
 
     return table
 
-# Add server line for deployment
-server = app.server
+# Add download functionality
+@app.callback(
+    Output("download-dataframe-csv", "data"),
+    Input("btn-download-csv", "n_clicks"),
+    [State('season-dropdown', 'value'),
+     State('team-dropdown', 'value')],
+    prevent_initial_call=True,
+)
+def generate_csv(n_clicks, selected_season, selected_teams):
+    # Filter by season
+    if selected_season == 'All':
+        filtered_df = df.copy()
+    else:
+        filtered_df = df[df['season'] == selected_season]
 
-# Run the app
+    # Filter by team(s) if any are selected
+    if selected_teams and len(selected_teams) > 0:
+        filtered_df = filtered_df[filtered_df['pure_team_name'].isin(selected_teams)]
+
+    # Select relevant columns
+    export_df = filtered_df[['season', 'pure_team_name', 'team_payroll', 'wins', 'efficiency']]
+    export_df.columns = ['Season', 'Team', 'Payroll', 'Wins', 'Wins_per_Million']
+
+    return dcc.send_data_frame(export_df.to_csv, "nba_payroll_analysis.csv", index=False)
+
+# Add an export button to the layout
+app.layout.children[0].children.append(
+    dbc.Row([
+        dbc.Col([
+            html.Div([
+                dbc.Button("Export Data as CSV", id="btn-download-csv", color="primary",
+                           className="mb-3 mt-3", style={'border-radius': '8px'}),
+                dcc.Download(id="download-dataframe-csv")
+            ], className="d-flex justify-content-end")
+        ], width=12)
+    ])
+)
+
+# Add summary statistics card
+@app.callback(
+    Output('summary-stats', 'children'),
+    [
+        Input('season-dropdown', 'value'),
+        Input('team-dropdown', 'value')
+    ]
+)
+def update_summary_stats(selected_season, selected_teams):
+    # Filter by season
+    if selected_season == 'All':
+        filtered_df = df.copy()
+    else:
+        filtered_df = df[df['season'] == selected_season]
+
+    # Filter by team(s) if any are selected
+    if selected_teams and len(selected_teams) > 0:
+        filtered_df = filtered_df[filtered_df['pure_team_name'].isin(selected_teams)]
+
+    # Calculate summary statistics
+    avg_payroll = filtered_df['team_payroll'].mean()
+    min_payroll = filtered_df['team_payroll'].min()
+    max_payroll = filtered_df['team_payroll'].max()
+
+    avg_wins = filtered_df['wins'].mean()
+    min_wins = filtered_df['wins'].min()
+    max_wins = filtered_df['wins'].max()
+
+    avg_efficiency = filtered_df['efficiency'].mean()
+    min_efficiency = filtered_df['efficiency'].min()
+    max_efficiency = filtered_df['efficiency'].max()
+
+    # Most and least efficient teams
+    most_efficient_team = filtered_df.loc[filtered_df['efficiency'].idxmax()]
+    least_efficient_team = filtered_df.loc[filtered_df['efficiency'].idxmin()]
+
+    # Create cards for summary statistics
+    stats_content = [
+        dbc.Row([
+            dbc.Col([
+                dbc.Card([
+                    dbc.CardHeader("Payroll Statistics",
+                                   style={'background-color': modern_theme['card_header_bg'],
+                                          'font-weight': '500'}),
+                    dbc.CardBody([
+                        html.P(f"Average: ${avg_payroll:,.0f}", className="mb-1"),
+                        html.P(f"Minimum: ${min_payroll:,.0f}", className="mb-1"),
+                        html.P(f"Maximum: ${max_payroll:,.0f}", className="mb-0")
+                    ])
+                ], className="h-100 shadow-sm", style={'border-radius': '8px', 'border': 'none'})
+            ], width=4),
+
+            dbc.Col([
+                dbc.Card([
+                    dbc.CardHeader("Wins Statistics",
+                                   style={'background-color': modern_theme['card_header_bg'],
+                                          'font-weight': '500'}),
+                    dbc.CardBody([
+                        html.P(f"Average: {avg_wins:.1f}", className="mb-1"),
+                        html.P(f"Minimum: {min_wins}", className="mb-1"),
+                        html.P(f"Maximum: {max_wins}", className="mb-0")
+                    ])
+                ], className="h-100 shadow-sm", style={'border-radius': '8px', 'border': 'none'})
+            ], width=4),
+
+            dbc.Col([
+                dbc.Card([
+                    dbc.CardHeader("Efficiency Statistics",
+                                   style={'background-color': modern_theme['card_header_bg'],
+                                          'font-weight': '500'}),
+                    dbc.CardBody([
+                        html.P(f"Average: {avg_efficiency:.2f} wins/$M", className="mb-1"),
+                        html.P(f"Minimum: {min_efficiency:.2f} wins/$M", className="mb-1"),
+                        html.P(f"Maximum: {max_efficiency:.2f} wins/$M", className="mb-0")
+                    ])
+                ], className="h-100 shadow-sm", style={'border-radius': '8px', 'border': 'none'})
+            ], width=4)
+        ], className="mb-3"),
+
+        dbc.Row([
+            dbc.Col([
+                dbc.Card([
+                    dbc.CardHeader("Most Efficient Team",
+                                   style={'background-color': modern_theme['primary_color'],
+                                          'color': 'white',
+                                          'font-weight': '500'}),
+                    dbc.CardBody([
+                        html.H5(most_efficient_team['pure_team_name'], className="mb-1"),
+                        html.P(f"Season: {most_efficient_team['season']}", className="mb-1"),
+                        html.P(f"Payroll: ${most_efficient_team['team_payroll']:,.0f}", className="mb-1"),
+                        html.P(f"Wins: {most_efficient_team['wins']}", className="mb-1"),
+                        html.P(f"Efficiency: {most_efficient_team['efficiency']:.2f} wins/$M", className="mb-0")
+                    ])
+                ], className="h-100 shadow-sm", style={'border-radius': '8px', 'border': 'none'})
+            ], width=6),
+
+            dbc.Col([
+                dbc.Card([
+                    dbc.CardHeader("Least Efficient Team",
+                                   style={'background-color': '#6c757d',
+                                          'color': 'white',
+                                          'font-weight': '500'}),
+                    dbc.CardBody([
+                        html.H5(least_efficient_team['pure_team_name'], className="mb-1"),
+                        html.P(f"Season: {least_efficient_team['season']}", className="mb-1"),
+                        html.P(f"Payroll: ${least_efficient_team['team_payroll']:,.0f}", className="mb-1"),
+                        html.P(f"Wins: {least_efficient_team['wins']}", className="mb-1"),
+                        html.P(f"Efficiency: {least_efficient_team['efficiency']:.2f} wins/$M", className="mb-0")
+                    ])
+                ], className="h-100 shadow-sm", style={'border-radius': '8px', 'border': 'none'})
+            ], width=6)
+        ])
+    ]
+
+    return stats_content
+
+# Add summary statistics section to the layout
+app.layout.children[0].children.insert(3,
+                                       dbc.Row([
+                                           dbc.Col([
+                                               dbc.Card([
+                                                   dbc.CardHeader("Summary Statistics",
+                                                                  className="text-dark",
+                                                                  style={'background-color': modern_theme['card_header_bg'],
+                                                                         'border-bottom': 'none',
+                                                                         'font-weight': '500',
+                                                                         'border-radius': '12px 12px 0 0'}),
+                                                   dbc.CardBody([
+                                                       html.Div(id="summary-stats")
+                                                   ], style={'padding': '1.25rem'})
+                                               ], className="mb-4 shadow-sm", style={'border-radius': '12px', 'border': 'none'})
+                                           ], width=12)
+                                       ])
+                                       )
+
+# Add insights tab to the layout
+
+@app.callback(
+    Output('insights-content', 'children'),
+    [
+        Input('season-dropdown', 'value'),
+        Input('team-dropdown', 'value')
+    ]
+)
+def update_insights(selected_season, selected_teams):
+    # Filter by season
+    if selected_season == 'All':
+        filtered_df = df.copy()
+        correlation = overall_correlation
+    else:
+        filtered_df = df[df['season'] == selected_season]
+        correlation = season_correlations[selected_season]
+
+    # Filter by team(s) if any are selected
+    if selected_teams and len(selected_teams) > 0:
+        filtered_df = filtered_df[filtered_df['pure_team_name'].isin(selected_teams)]
+
+    # Generate insights based on the correlation value
+    if correlation > 0.7:
+        insight_title = "Strong Relationship Between Payroll and Performance"
+        insight_text = """
+        The data shows a strong positive correlation between team payroll and wins, indicating that higher-spending teams tend to perform better. 
+    This is often due to teams with larger payrolls being able to afford star players, experienced veterans, and deeper rosters, which are critical for sustained success.
+    However, it's important to note that injuries can significantly impact performance, even for high-spending teams. For example, a team with a top-heavy payroll might struggle if their star player gets injured.
+    Additionally, teams that spend heavily often have the resources to retain key players, build chemistry, and make mid-season adjustments, which can lead to more wins.
+        """
+    elif correlation > 0.4:
+        insight_title = "Moderate Relationship Between Payroll and Performance"
+        insight_text = """
+        The data shows a moderate positive correlation between payroll and wins, suggesting that while spending more can help, it's not the only factor driving success.
+    Teams with moderate payrolls often strike a balance between investing in star talent and developing young players. For instance, a team might sign a veteran leader while also nurturing a rookie who outperforms their contract.
+    Injuries and player development play a significant role here. A team with a moderate payroll might overperform if their young players develop quickly or if they avoid major injuries to key players.
+    Additionally, teams with strong coaching and front-office strategies can maximize the value of their payroll, achieving better results than their spending might suggest.
+        """
+    elif correlation > 0.1:
+        insight_title = "Weak Relationship Between Payroll and Performance"
+        insight_text = """
+        The data shows only a weak correlation between payroll and wins, indicating that spending more doesn't guarantee success.
+    In the NBA, factors like player development, coaching, and team chemistry often outweigh payroll. For example, a team with a low payroll might overperform if they draft a future star on a rookie contract or if their coaching staff maximizes the potential of role players.
+    Injuries also play a huge role. A team with a high payroll might underperform if their star player is injured, while a low-payroll team might exceed expectations if they stay healthy and develop their young talent.
+    Additionally, teams that focus on building through the draft and developing players internally can achieve success without breaking the bank, as seen with teams like the Golden State Warriors during their championship run in 2014-2015.
+        """
+    else:
+        insight_title = "Little to No Relationship Between Payroll and Performance"
+        insight_text = """
+        The data shows minimal correlation between payroll and wins, highlighting that how money is spent is far more important than how much is spent.
+    In the NBA, teams can achieve success through smart drafting, player development, and strategic signings. For example, a team might draft a future MVP on a rookie contract, allowing them to allocate resources elsewhere while still competing at a high level.
+    Injuries, coaching, and team chemistry are critical factors. A high-payroll team might underperform if they lack depth or if their star player is injured, while a low-payroll team might overperform if they have a strong culture and a cohesive game plan.
+        """
+
+    # Calculate expected wins using linear regression
+    X = filtered_df[['team_payroll']]
+    y = filtered_df['wins']
+    model = LinearRegression()
+    model.fit(X, y)
+    filtered_df['expected_wins'] = model.predict(X)
+    filtered_df['performance_diff'] = filtered_df['wins'] - filtered_df['expected_wins']
+
+    # Sort by over/underperformance
+    overperformers = filtered_df.sort_values('performance_diff', ascending=False).head(3)
+    underperformers = filtered_df.sort_values('performance_diff', ascending=True).head(3)
+
+    # Create cards for insights
+    insights_content = [
+        dbc.Row([
+            dbc.Col([
+                dbc.Card([
+                    dbc.CardHeader(insight_title,
+                                   style={'background-color': modern_theme['primary_color'],
+                                          'color': 'white',
+                                          'font-weight': '500'}),
+                    dbc.CardBody([
+                        html.P(insight_text)
+                    ])
+                ], className="shadow-sm", style={'border-radius': '8px', 'border': 'none'})
+            ], width=12)
+        ], className="mb-3"),
+
+        dbc.Row([
+            dbc.Col([
+                dbc.Card([
+                    dbc.CardHeader("Top Overperforming Teams",
+                                   style={'background-color': '#198754',
+                                          'color': 'white',
+                                          'font-weight': '500'}),
+                    dbc.CardBody([
+                        html.Div([
+                            html.Div([
+                                html.H5(f"{row['pure_team_name']} ({row['season']})", className="mb-1"),
+                                html.P(f"Wins: {row['wins']} (Expected: {row['expected_wins']:.1f})", className="mb-1"),
+                                html.P(f"Payroll: ${row['team_payroll']:,.0f}", className="mb-1"),
+                                html.P(f"Overperformance: +{row['performance_diff']:.1f} wins",
+                                       className="mb-3",
+                                       style={'color': '#198754', 'font-weight': '500'})
+                            ]) for _, row in overperformers.iterrows()
+                        ])
+                    ])
+                ], className="h-100 shadow-sm", style={'border-radius': '8px', 'border': 'none'})
+            ], width=6),
+
+            dbc.Col([
+                dbc.Card([
+                    dbc.CardHeader("Top Underperforming Teams",
+                                   style={'background-color': '#dc3545',
+                                          'color': 'white',
+                                          'font-weight': '500'}),
+                    dbc.CardBody([
+                        html.Div([
+                            html.Div([
+                                html.H5(f"{row['pure_team_name']} ({row['season']})", className="mb-1"),
+                                html.P(f"Wins: {row['wins']} (Expected: {row['expected_wins']:.1f})", className="mb-1"),
+                                html.P(f"Payroll: ${row['team_payroll']:,.0f}", className="mb-1"),
+                                html.P(f"Underperformance: {row['performance_diff']:.1f} wins",
+                                       className="mb-3",
+                                       style={'color': '#dc3545', 'font-weight': '500'})
+                            ]) for _, row in underperformers.iterrows()
+                        ])
+                    ])
+                ], className="h-100 shadow-sm", style={'border-radius': '8px', 'border': 'none'})
+            ], width=6)
+        ])
+    ]
+
+    return insights_content
+
+# Add insights section to the layout
+app.layout.children[0].children.insert(4,
+                                       dbc.Row([
+                                           dbc.Col([
+                                               dbc.Card([
+                                                   dbc.CardHeader("Data Insights",
+                                                                  className="text-dark",
+                                                                  style={'background-color': modern_theme['card_header_bg'],
+                                                                         'border-bottom': 'none',
+                                                                         'font-weight': '500',
+                                                                         'border-radius': '12px 12px 0 0'}),
+                                                   dbc.CardBody([
+                                                       html.Div(id="insights-content")
+                                                   ], style={'padding': '1.25rem'})
+                                               ], className="mb-4 shadow-sm", style={'border-radius': '12px', 'border': 'none'})
+                                           ], width=12)
+                                       ])
+                                       )
+
+# Set up logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# Run the Dash app
 if __name__ == '__main__':
     url = "http://127.0.0.1:8050/"
     print(f"Dash app is running. If the browser does not open automatically, click here: {url}")
