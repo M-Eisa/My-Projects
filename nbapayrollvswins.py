@@ -1,12 +1,14 @@
 import pandas as pd
 import plotly.express as px
+import plotly.graph_objects as go
 import numpy as np
 import webbrowser
 import logging
 import dash
 from dash import dcc
 from dash import html
-from dash.dependencies import Input, Output
+from dash.dependencies import Input, Output, State
+import dash_bootstrap_components as dbc
 
 # Define dataset with NBA team payroll, wins data, and team names for each season
 data = {
@@ -93,58 +95,425 @@ df_list = []
 for season, season_data in data.items():
     season_df = pd.DataFrame(season_data)
     season_df['season'] = season
+    # Add pure team name (without season) for filtering
+    season_df['pure_team_name'] = season_df['team_name']
     # Format team names to include the season
-    season_df['team_name'] = season + ' ' + season_df['team_name']
+    season_df['team_name_with_season'] = season + ' ' + season_df['team_name']
     df_list.append(season_df)
 
 df = pd.concat(df_list, ignore_index=True)
 
-# Calculate correlation between payroll and wins
-correlation = np.corrcoef(df['team_payroll'], df['wins'])[0, 1]
+# Calculate efficiency metric (wins per million dollars)
+df['efficiency'] = (df['wins'] * 1000000) / df['team_payroll']
 
-# Initialize the Dash app
-app = dash.Dash(__name__)
+# Get unique team names for the filter dropdown
+unique_teams = sorted(df['pure_team_name'].unique())
 
-# Define the layout of the Dash app using a Div container
+# Calculate correlation coefficient for each season
+season_correlations = {}
+for season in df['season'].unique():
+    season_data = df[df['season'] == season]
+    season_correlations[season] = np.corrcoef(season_data['team_payroll'], season_data['wins'])[0, 1]
+
+# Calculate overall correlation
+overall_correlation = np.corrcoef(df['team_payroll'], df['wins'])[0, 1]
+
+# Define light theme styles
+light_theme = {
+    'graph_bg': 'white',
+    'paper_bg': 'white',
+    'grid_color': 'lightgray',
+    'text_color': 'black',
+    'bg_color': 'white',
+    'card_bg': 'white',
+    'card_header_bg': '#f8f9fa',  # Light gray header background
+    'card_header_text': 'black',  # Black text for header
+    'table_style': {'striped': True, 'bordered': True, 'hover': True, 'responsive': True, 'className': 'table-sm'},
+}
+
+# Initialize the Dash app with Bootstrap for styling
+app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
+app.title = "NBA Payroll Analysis Dashboard"
+
+# Define the layout of the Dash app
 app.layout = html.Div([
-    dcc.Dropdown(
-        id='season-dropdown',
-        options=[{'label': season, 'value': season} for season in df['season'].unique()] + [{'label': 'All Seasons', 'value': 'All'}],
-        value='All',
-        clearable=False
-    ),
-    dcc.Graph(id='scatter-plot')
-])
+    # Main container
+    dbc.Container([
+        dbc.Row([
+            dbc.Col([
+                html.Div([
+                    html.H1("NBA Team Payroll vs. Performance Analysis",
+                            className="text-center my-4 text-dark"),
+                    html.P("An analysis of how NBA team payrolls impact season performance",
+                           className="text-center mb-4 text-secondary"),
+                ], className="dashboard-header")
+            ], width=12)
+        ]),
 
-# Callback function to update the scatter plot based on the selected season from the dropdown menu
+        dbc.Row([
+            dbc.Col([
+                dbc.Card([
+                    dbc.CardHeader("Filters",
+                                   className="text-dark bg-light"),  # Light background, dark text
+                    dbc.CardBody([
+                        html.Label("Select Season:"),
+                        dcc.Dropdown(
+                            id='season-dropdown',
+                            options=[{'label': season, 'value': season} for season in sorted(df['season'].unique(), reverse=True)] +
+                                    [{'label': 'All Seasons', 'value': 'All'}],
+                            value='All',
+                            clearable=False,
+                            className="mb-3"
+                        ),
+
+                        html.Label("Select Team(s):"),
+                        dcc.Dropdown(
+                            id='team-dropdown',
+                            options=[{'label': team, 'value': team} for team in unique_teams],
+                            value=[],
+                            clearable=True,
+                            multi=True,
+                            className="mb-3",
+                            placeholder="Select teams or leave empty for all teams"
+                        ),
+
+                        html.Label("View Mode:"),
+                        dbc.RadioItems(
+                            id='view-mode',
+                            options=[
+                                {'label': 'Payroll vs Wins', 'value': 'payroll_wins'},
+                                {'label': 'Efficiency (Wins per $M)', 'value': 'efficiency'}
+                            ],
+                            value='payroll_wins',
+                            inline=True,
+                            className="mb-3"
+                        ),
+
+                        html.Div(id="correlation-display", className="mt-3 p-2 border rounded bg-light"),
+                    ])
+                ], className="mb-4 shadow-sm")
+            ], width=3),
+
+            dbc.Col([
+                dbc.Card([
+                    dbc.CardHeader("Visualization",
+                                   className="text-dark bg-light"),  # Light background, dark text
+                    dbc.CardBody([
+                        dcc.Graph(id='main-graph', style={'height': '60vh'})
+                    ])
+                ], className="mb-4 shadow-sm")
+            ], width=9)
+        ]),
+
+        dbc.Row([
+            dbc.Col([
+                dbc.Card([
+                    dbc.CardHeader("Team Performance Table",
+                                   className="text-dark bg-light"),  # Light background, dark text
+                    dbc.CardBody([
+                        html.Div(id="table-container", style={"maxHeight": "300px", "overflow": "auto"})
+                    ])
+                ], className="shadow-sm")
+            ], width=12)
+        ]),
+
+        dbc.Row([
+            dbc.Col([
+                html.Footer([
+                    html.P("Data source: HoopsHype (Salaries) and NBA.com (Standings)",
+                           className="text-center text-muted mt-4 mb-4")
+                ])
+            ], width=12)
+        ])
+    ], fluid=True, className="p-4")
+], style={'background-color': light_theme['bg_color'], 'min-height': '100vh', 'color': light_theme['text_color']})
+
+# Callback to update the correlation display
 @app.callback(
-    Output('scatter-plot', 'figure'),
-    Input('season-dropdown', 'value')
+    Output('correlation-display', 'children'),
+    [Input('season-dropdown', 'value')]
 )
+def update_correlation(selected_season):
+    if selected_season == 'All':
+        correlation = overall_correlation
+        message = f"Overall correlation between payroll and wins: {correlation:.3f}"
+    else:
+        correlation = season_correlations[selected_season]
+        message = f"Correlation for {selected_season} season: {correlation:.3f}"
 
-# Generate a scatter plot of team payroll vs wins, filtering data by the selected season
-def update_graph(selected_season):
-    filtered_df = df if selected_season == 'All' else df[df['season'] == selected_season]
-    fig = px.scatter(
-        filtered_df, x='team_payroll', y='wins',
-        title=f'NBA Team Payroll vs Wins ({selected_season if selected_season != "All" else "All Seasons"})',
-        labels={'team_payroll': 'Team Payroll (USD)', 'wins': 'Wins'},
-        hover_data={'team_name': True},  # Include team name in the hover information
-        custom_data=['team_name']  # Use custom_data to pass team_name for hover template
+    # Interpretation message
+    if correlation > 0.7:
+        interpretation = "Strong positive correlation"
+    elif correlation > 0.4:
+        interpretation = "Moderate positive correlation"
+    elif correlation > 0.1:
+        interpretation = "Weak positive correlation"
+    elif correlation > -0.1:
+        interpretation = "No significant correlation"
+    else:
+        interpretation = "Negative correlation"
+
+    # Add an icon based on correlation strength
+    if correlation > 0.4:
+        icon = html.I(className="fas fa-arrow-trend-up me-2 text-success")
+    elif correlation > 0.1:
+        icon = html.I(className="fas fa-arrow-trend-up me-2 text-info")
+    elif correlation > -0.1:
+        icon = html.I(className="fas fa-minus me-2 text-warning")
+    else:
+        icon = html.I(className="fas fa-arrow-trend-down me-2 text-danger")
+
+    return html.Div([
+        html.P(message, className="mb-1"),
+        html.P([icon, interpretation], className="font-weight-bold")
+    ])
+
+# Callback to update the main graph based on filters
+@app.callback(
+    Output('main-graph', 'figure'),
+    [
+        Input('season-dropdown', 'value'),
+        Input('team-dropdown', 'value'),
+        Input('view-mode', 'value')
+    ]
+)
+def update_graph(selected_season, selected_teams, view_mode):
+    # Filter by season
+    if selected_season == 'All':
+        filtered_df = df.copy()
+    else:
+        filtered_df = df[df['season'] == selected_season]
+
+    # Filter by team(s) if any are selected
+    if selected_teams and len(selected_teams) > 0:
+        filtered_df = filtered_df[filtered_df['pure_team_name'].isin(selected_teams)]
+
+    # Determine what to plot based on view mode
+    if view_mode == 'efficiency':
+        # Efficiency view (Wins per million dollars)
+        filtered_df = filtered_df.sort_values('efficiency', ascending=False)
+
+        fig = px.bar(
+            filtered_df,
+            x='pure_team_name' if selected_season != 'All' else 'team_name_with_season',
+            y='efficiency',
+            color='efficiency',
+            color_continuous_scale='Blues',
+            title=f'Team Efficiency (Wins per $Million) {selected_season if selected_season != "All" else "All Seasons"}',
+            labels={
+                'pure_team_name': 'Team',
+                'team_name_with_season': 'Team',
+                'efficiency': 'Wins per $Million'
+            },
+            custom_data=['season', 'wins', 'team_payroll']
+        )
+
+        fig.update_traces(
+            hovertemplate='%{x}<br>Season: %{customdata[0]}<br>Efficiency: %{y:.2f} wins/$M<br>Wins: %{customdata[1]}<br>Payroll: $%{customdata[2]:,.0f}<extra></extra>'
+        )
+
+        fig.update_layout(
+            xaxis={'categoryorder': 'total descending'},
+            yaxis_title="Wins per $Million",
+            xaxis_title="",
+            plot_bgcolor=light_theme['graph_bg'],
+            paper_bgcolor=light_theme['paper_bg'],
+            font=dict(color=light_theme['text_color'])
+        )
+
+    else:
+        # Default payroll vs wins view
+        fig = go.Figure()
+
+        marker_color = 'royalblue'
+
+        # Add scatter points
+        if selected_season == 'All':
+            # Color by season when showing all seasons
+            colors = px.colors.qualitative.Plotly
+
+            for i, season in enumerate(sorted(filtered_df['season'].unique())):
+                season_data = filtered_df[filtered_df['season'] == season]
+                fig.add_trace(go.Scatter(
+                    x=season_data['team_payroll'],
+                    y=season_data['wins'],
+                    mode='markers',
+                    marker=dict(
+                        size=12,
+                        color=colors[i % len(colors)],
+                        line=dict(width=1, color='black')
+                    ),
+                    name=season,
+                    customdata=np.stack((
+                        season_data['pure_team_name'],
+                        season_data['season'],
+                        season_data['efficiency']
+                    ), axis=-1),
+                    hovertemplate='%{customdata[0]}<br>Season: %{customdata[1]}<br>Payroll: $%{x:,.0f}<br>Wins: %{y}<br>Efficiency: %{customdata[2]:.2f} wins/$M<extra></extra>'
+                ))
+        else:
+            # Single color for single season
+            highlight_teams = False
+
+            # Check if specific teams are selected
+            if selected_teams and len(selected_teams) > 0:
+                highlight_teams = True
+
+            fig.add_trace(go.Scatter(
+                x=filtered_df['team_payroll'],
+                y=filtered_df['wins'],
+                mode='markers+text' if highlight_teams and len(filtered_df) < 15 else 'markers',
+                marker=dict(
+                    size=15,
+                    color=marker_color,
+                    line=dict(width=1, color='black')
+                ),
+                text=filtered_df['pure_team_name'] if highlight_teams and len(filtered_df) < 15 else None,
+                textposition='top center',
+                name='Teams',
+                customdata=np.stack((
+                    filtered_df['pure_team_name'],
+                    filtered_df['season'],
+                    filtered_df['efficiency']
+                ), axis=-1),
+                hovertemplate='%{customdata[0]}<br>Season: %{customdata[1]}<br>Payroll: $%{x:,.0f}<br>Wins: %{y}<br>Efficiency: %{customdata[2]:.2f} wins/$M<extra></extra>'
+            ))
+
+        # Add trendline if there are enough data points
+        if len(filtered_df) > 1:
+            # Calculate trend line points
+            x = filtered_df['team_payroll']
+            y = filtered_df['wins']
+            z = np.polyfit(x, y, 1)
+            p = np.poly1d(z)
+
+            # Create x points for the line
+            x_trend = [min(x), max(x)]
+            y_trend = [p(min(x)), p(max(x))]
+
+            # Add the trend line
+            fig.add_trace(go.Scatter(
+                x=x_trend,
+                y=y_trend,
+                mode='lines',
+                line=dict(color='red', dash='dash', width=2),
+                name='Trend Line',
+                hoverinfo='skip'
+            ))
+
+        # Update layout
+        fig.update_layout(
+            title=f'NBA Team Payroll vs Wins ({selected_season if selected_season != "All" else "All Seasons"})',
+            xaxis_title="Team Payroll (USD)",
+            yaxis_title="Wins",
+            plot_bgcolor=light_theme['graph_bg'],
+            paper_bgcolor=light_theme['paper_bg'],
+            font=dict(color=light_theme['text_color'])
+        )
+
+    # Common layout updates
+    fig.update_layout(
+        font=dict(family="Montserrat", size=12, color=light_theme['text_color']),
+        margin=dict(l=40, r=40, t=60, b=40),
+        legend=dict(
+            orientation="h",
+            yanchor="bottom",
+            y=1.02,
+            xanchor="right",
+            x=1,
+            font=dict(color=light_theme['text_color']),
+            bgcolor='rgba(255,255,255,0.5)'
+        ),
+        title=dict(
+            y=0.98,
+            x=0.5,
+            xanchor='center',
+            font=dict(size=16)
+        )
     )
 
-    # Update hover template to display only the team name
-    fig.update_traces(
-        hovertemplate='%{customdata[0]}<br>Payroll: %{x:$,.0f}<br>Wins: %{y}<extra></extra>'
+    # Add gridlines
+    fig.update_xaxes(
+        showgrid=True,
+        gridwidth=1,
+        gridcolor=light_theme['grid_color'],
+        showline=True,
+        linewidth=1,
+        linecolor=light_theme['grid_color'],
+        mirror=True
+    )
+    fig.update_yaxes(
+        showgrid=True,
+        gridwidth=1,
+        gridcolor=light_theme['grid_color'],
+        showline=True,
+        linewidth=1,
+        linecolor=light_theme['grid_color'],
+        mirror=True
     )
 
     return fig
 
-# Start the Dash server, open the app in a web browser, and suppress default werkzeug logs
+# Callback to generate the data table
+@app.callback(
+    Output('table-container', 'children'),
+    [
+        Input('season-dropdown', 'value'),
+        Input('team-dropdown', 'value')
+    ]
+)
+def update_table(selected_season, selected_teams):
+    # Filter by season
+    if selected_season == 'All':
+        filtered_df = df.copy()
+    else:
+        filtered_df = df[df['season'] == selected_season]
+
+    # Filter by team(s) if any are selected
+    if selected_teams and len(selected_teams) > 0:
+        filtered_df = filtered_df[filtered_df['pure_team_name'].isin(selected_teams)]
+
+    # Create a copy of the DataFrame with formatted values for display
+    display_df = filtered_df.copy()
+
+    # Format payroll as currency
+    display_df['team_payroll'] = display_df['team_payroll'].apply(lambda x: f"${x:,.0f}")
+
+    # Format efficiency with 2 decimal places
+    display_df['efficiency'] = display_df['efficiency'].apply(lambda x: f"{x:.2f}")
+
+    # Select and reorder columns for display
+    if selected_season == 'All':
+        display_columns = ['season', 'pure_team_name', 'team_payroll', 'wins', 'efficiency']
+        display_df = display_df[display_columns]
+        display_df.columns = ['Season', 'Team', 'Payroll', 'Wins', 'Wins per $Million']
+    else:
+        display_columns = ['pure_team_name', 'team_payroll', 'wins', 'efficiency']
+        display_df = display_df[display_columns]
+        display_df.columns = ['Team', 'Payroll', 'Wins', 'Wins per $Million']
+
+    # Sort by wins in descending order
+    display_df = display_df.sort_values('Wins', ascending=False)
+
+    # Generate the table with light theme styling
+    table = dbc.Table.from_dataframe(
+        display_df,
+        striped=True,
+        bordered=True,
+        hover=True,
+        responsive=True,
+        className='table-sm'
+    )
+
+    return table
+
+# Add server line for deployment
+server = app.server
+
+# Run the app
 if __name__ == '__main__':
     url = "http://127.0.0.1:8050/"
     print(f"Dash app is running. If the browser does not open automatically, click here: {url}")
-    print(f'Correlation between team payroll and wins: {correlation:.2f}')
     webbrowser.open(url)
     log = logging.getLogger('werkzeug')
     log.setLevel(logging.ERROR)
