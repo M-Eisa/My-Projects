@@ -369,7 +369,7 @@ def update_graph(selected_season, selected_teams, view_mode):
                     marker=dict(
                         size=12,
                         color=colors[i % len(colors)],
-                        line=dict(width=0)  # Removed black outline
+                        line=dict(width=0)  
                     ),
                     name=season,
                     customdata=np.stack((
@@ -395,7 +395,7 @@ def update_graph(selected_season, selected_teams, view_mode):
                     size=15,
                     color=marker_color,
                     opacity=0.85,
-                    line=dict(width=0)  # Removed black outline
+                    line=dict(width=0)  
                 ),
                 text=filtered_df['pure_team_name'] if highlight_teams and len(filtered_df) < 15 else None,
                 textposition='top center',
@@ -463,7 +463,6 @@ def update_graph(selected_season, selected_teams, view_mode):
             bgcolor=modern_theme['hover_box_bg'],
             bordercolor=modern_theme['hover_box_border'],
             font=dict(family="Montserrat, Arial, sans-serif", size=12, color=modern_theme['text_color']),
-            # Add rounded corners to hover boxes
             namelength=-1
         )
     )
@@ -493,7 +492,7 @@ def update_graph(selected_season, selected_teams, view_mode):
         zeroline=False
     )
 
-    # Format hover templates for better appearance with curve edges (CSS is handled through config)
+    # Format hover templates 
     fig.update_layout(
         hoverlabel=dict(
             bgcolor=modern_theme['hover_box_bg'],
@@ -502,7 +501,7 @@ def update_graph(selected_season, selected_teams, view_mode):
         )
     )
 
-    # Apply template (optional, helps with styling consistency)
+    # Apply template 
     fig.update_layout(template="plotly_white")
 
     return fig
@@ -728,7 +727,6 @@ app.layout.children[0].children.insert(3,
                                        )
 
 # Add insights tab to the layout
-
 @app.callback(
     Output('insights-content', 'children'),
     [
