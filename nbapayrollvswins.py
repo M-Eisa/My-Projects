@@ -878,6 +878,6 @@ app.layout.children[0].children.insert(4,
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Run the Dash app
+# Run the Dash application
 if __name__ == '__main__':
     app.run_server(debug=False)
