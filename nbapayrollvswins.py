@@ -880,9 +880,4 @@ logger = logging.getLogger(__name__)
 
 # Run the Dash app
 if __name__ == '__main__':
-    url = "http://127.0.0.1:8050/"
-    print(f"Dash app is running. If the browser does not open automatically, click here: {url}")
-    webbrowser.open(url)
-    log = logging.getLogger('werkzeug')
-    log.setLevel(logging.ERROR)
     app.run_server(debug=False)
