@@ -30,10 +30,11 @@ class Tetromino:
     # Names for the tetrominos
     tetromino_names = ["I", "Z", "S", "J", "L", "T", "O"]
 
+    # Bounding boxes for each tetromino type and rotation state
     bounding_boxes = {
         0: {  # I piece
-            0: (1, 1, 0, 3),  # vertical orientation
-            1: (0, 3, 1, 1)   # horizontal orientation
+            0: (1, 1, 0, 3),
+            1: (0, 3, 1, 1)
         },
         1: {  # Z piece
             0: (0, 2, 1, 2),
@@ -108,8 +109,12 @@ class Tetris:
         self.can_hold = True
         self.game_started = False
         self.combo_count = 0
-
-        # Difficulty settings
+        self.last_rotation_pos = None
+        self.t_spin = False
+        self.t_spin_mini = False
+        self.last_move_was_rotation = False
+        self.t_spin_message = ""
+        self.t_spin_message_timer = 0
         self.height = height
         self.width = width
         self.field = []
@@ -128,6 +133,10 @@ class Tetris:
             self.next_tetromino = Tetromino(3, 0)
 
         self.game_started = True
+        self.last_rotation_pos = None
+        self.t_spin = False
+        self.t_spin_mini = False
+        self.last_move_was_rotation = False
 
     def hold_current_piece(self):
         if not self.can_hold:
@@ -158,6 +167,10 @@ class Tetris:
             self.hold_piece.color = temp_color
 
         self.can_hold = False  # Can't hold again until next piece
+        self.last_rotation_pos = None
+        self.t_spin = False
+        self.t_spin_mini = False
+        self.last_move_was_rotation = False
 
     def get_ghost_position(self):
         """Calculate where the current piece would land if dropped"""
@@ -210,6 +223,72 @@ class Tetris:
                         intersection = True
         return intersection
 
+    def check_tspin(self):
+        """
+        Check if last move was a T-spin.
+        T-spins occur when:
+        1. The piece is a T
+        2. Last move was a rotation
+        3. At least 3 of the 4 corners around the T center are filled
+        """
+        if not self.last_move_was_rotation:
+            return False
+
+        if self.tetromino.type != 5:  # Not a T piece
+            return False
+
+        # Define the 4 corner positions around T center
+        center_x = self.tetromino.x + 1
+        center_y = self.tetromino.y + 1
+        corners = [
+            (center_x - 1, center_y - 1),  # Top-left
+            (center_x + 1, center_y - 1),  # Top-right
+            (center_x - 1, center_y + 1),  # Bottom-left
+            (center_x + 1, center_y + 1)   # Bottom-right
+        ]
+
+        # Check how many corners are filled
+        filled_corners = 0
+        for x, y in corners:
+            # Check if corner is outside grid or filled with a block
+            if (x < 0 or x >= self.width or y < 0 or y >= self.height or
+                    (0 <= y < self.height and 0 <= x < self.width and self.field[y][x] > 0)):
+                filled_corners += 1
+
+        # Check front corners (depends on rotation)
+        front_corners = []
+        if self.tetromino.rotation == 0:  # T points up
+            front_corners = [corners[2], corners[3]]  # Bottom corners
+        elif self.tetromino.rotation == 1:  # T points right
+            front_corners = [corners[0], corners[2]]  # Left corners
+        elif self.tetromino.rotation == 2:  # T points down
+            front_corners = [corners[0], corners[1]]  # Top corners
+        elif self.tetromino.rotation == 3:  # T points left
+            front_corners = [corners[1], corners[3]]  # Right corners
+
+        front_filled = 0
+        for x, y in front_corners:
+            if (x < 0 or x >= self.width or y < 0 or y >= self.height or
+                    (0 <= y < self.height and 0 <= x < self.width and self.field[y][x] > 0)):
+                front_filled += 1
+
+        # T-Spin Mini requires only 2 front corners filled and at least 3 total corners
+        if filled_corners >= 3:
+            if front_filled >= 2:
+                self.t_spin = True
+                self.t_spin_mini = False
+                self.t_spin_message = "T-SPIN"
+                self.t_spin_message_timer = 90  # Show for 3 seconds
+                return True
+            else:
+                self.t_spin = True
+                self.t_spin_mini = True
+                self.t_spin_message = "T-SPIN MINI"
+                self.t_spin_message_timer = 90
+                return True
+
+        return False
+
     def break_lines(self):
         lines = 0
         for i in range(1, self.height):
@@ -233,14 +312,61 @@ class Tetris:
             self.combo_count += 1
             combo_bonus = (self.combo_count - 1) * 50 if self.combo_count > 1 else 0
 
-            # Score calculation: more points for clearing multiple lines at once
+            # Score calculation with T-spin bonus
             line_scores = [0, 100, 300, 700, 1500]  # 0, 1, 2, 3, or 4 lines
-            self.score += (line_scores[min(lines, 4)] * self.level) + combo_bonus
+
+            # T-spin bonuses
+            if self.t_spin:
+                if self.t_spin_mini:
+                    # T-spin Mini: 1x normal score for T-spin mini with no lines,
+                    # 2x for T-spin mini single, 3x for T-spin mini double
+                    if lines == 0:
+                        self.score += 100 * self.level + combo_bonus
+                        self.t_spin_message = "T-SPIN MINI"
+                    elif lines == 1:
+                        self.score += 200 * self.level + combo_bonus
+                        self.t_spin_message = "T-SPIN MINI SINGLE"
+                    elif lines == 2:
+                        self.score += 600 * self.level + combo_bonus
+                        self.t_spin_message = "T-SPIN MINI DOUBLE"
+                else:
+                    # Full T-spin: 4x normal score for T-spin with no lines,
+                    # 8x for T-spin single, 12x for T-spin double, 16x for T-spin triple
+                    if lines == 0:
+                        self.score += 400 * self.level + combo_bonus
+                        self.t_spin_message = "T-SPIN"
+                    elif lines == 1:
+                        self.score += 800 * self.level + combo_bonus
+                        self.t_spin_message = "T-SPIN SINGLE"
+                    elif lines == 2:
+                        self.score += 1200 * self.level + combo_bonus
+                        self.t_spin_message = "T-SPIN DOUBLE"
+                    elif lines == 3:
+                        self.score += 1600 * self.level + combo_bonus
+                        self.t_spin_message = "T-SPIN TRIPLE"
+
+                self.t_spin_message_timer = 90  # Show for 3 seconds
+            else:
+                # Regular line clear
+                self.score += (line_scores[min(lines, 4)] * self.level) + combo_bonus
+                if lines == 4:
+                    self.t_spin_message = "TETRIS!"
+                    self.t_spin_message_timer = 90
 
             if self.score > self.high_score:
                 self.high_score = self.score
                 self.save_high_score()
         else:
+            # No lines cleared
+            if self.t_spin:
+                # T-spin with no lines still gets points
+                if self.t_spin_mini:
+                    self.score += 100 * self.level
+                    self.t_spin_message = "T-SPIN MINI"
+                else:
+                    self.score += 400 * self.level
+                    self.t_spin_message = "T-SPIN"
+                self.t_spin_message_timer = 90
             # Reset combo if no lines cleared
             self.combo_count = 0
 
@@ -262,15 +388,21 @@ class Tetris:
         while not self.intersects():
             self.tetromino.y += 1
         self.tetromino.y -= 1
+        self.last_move_was_rotation = False
         self.freeze()
 
     def go_down(self):
         self.tetromino.y += 1
         if self.intersects():
             self.tetromino.y -= 1
+            self.last_move_was_rotation = False
             self.freeze()
 
     def freeze(self):
+        # Check for T-spin before freezing
+        if self.tetromino.type == 5:  # If it's a T piece
+            self.check_tspin()
+
         for i in range(4):
             for j in range(4):
                 if i * 4 + j in self.tetromino.image():
@@ -290,9 +422,13 @@ class Tetris:
         self.tetromino.x += dx
         if self.intersects():
             self.tetromino.x = old_x
+        else:
+            self.last_move_was_rotation = False
 
     def rotate(self):
         old_rotation = self.tetromino.rotation
+        old_x, old_y = self.tetromino.x, self.tetromino.y
+
         self.tetromino.rotate()
         if self.intersects():
             # Try wall kicks - nudge left, right, and up if rotation causes collision
@@ -305,6 +441,8 @@ class Tetris:
                     self.tetromino.y += kick_y
 
                     if not self.intersects():
+                        self.last_rotation_pos = (old_x, old_y, old_rotation)
+                        self.last_move_was_rotation = True
                         return  # Found a valid position
 
                     # Revert the kick attempt
@@ -313,6 +451,10 @@ class Tetris:
 
             # If all kick attempts failed, revert rotation
             self.tetromino.rotation = old_rotation
+        else:
+            # Rotation was successful with no kicks
+            self.last_rotation_pos = (old_x, old_y, old_rotation)
+            self.last_move_was_rotation = True
 
     def toggle_pause(self):
         self.paused = not self.paused
@@ -333,7 +475,7 @@ LIGHT_BLUE = (173, 216, 230)
 GHOST_COLOR = (210, 210, 210)  # Light gray for ghost piece
 
 # Game window size
-size = (600, 600)  # Make window wider to fit hold piece
+size = (600, 600)
 screen = pygame.display.set_mode(size)
 
 pygame.display.set_caption("Tetris")
@@ -413,7 +555,7 @@ def draw_preview_piece(tetromino, x, y, zoom, screen, is_hold=False):
 # Loop until the user clicks the close button
 done = False
 clock = pygame.time.Clock()
-fps = 25
+fps = 30
 game = Tetris(20, 10)
 counter = 0
 
@@ -437,6 +579,12 @@ while not done:
     # Get ghost piece position
     ghost_y = game.get_ghost_position() if game.tetromino and game.ghost_piece else None
 
+    # Update T-spin message timer
+    if game.t_spin_message_timer > 0:
+        game.t_spin_message_timer -= 1
+    else:
+        game.t_spin_message = ""
+
     # Event handling
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -452,9 +600,9 @@ while not done:
                 game.go_side(1)
             if event.key == pygame.K_SPACE and not game.paused:
                 game.go_space()
-            if event.key == pygame.K_c and not game.paused:  # Hold piece with C key
+            if event.key == pygame.K_c and not game.paused:
                 game.hold_current_piece()
-            if event.key == pygame.K_g:  # Toggle ghost piece
+            if event.key == pygame.K_g:
                 game.toggle_ghost()
             if event.key == pygame.K_ESCAPE:
                 game.__init__(20, 10)
@@ -509,6 +657,7 @@ while not done:
     font = pygame.font.SysFont('Calibri', 25, True, False)
     font_small = pygame.font.SysFont('Calibri', 20, True, False)
     font_big = pygame.font.SysFont('Calibri', 65, True, False)
+    font_tspin = pygame.font.SysFont('Calibri', 30, True, False)
 
     # Game information
     text_hold = font.render("Hold:", True, BLACK)
@@ -522,6 +671,11 @@ while not done:
     if game.combo_count > 1:
         text_combo = font.render(f"Combo: x{game.combo_count}", True, (255, 0, 0))
         screen.blit(text_combo, [preview_x, preview_y + preview_size + 140])
+
+    # T-spin message display
+    if game.t_spin_message:
+        text_tspin = font_tspin.render(game.t_spin_message, True, (255, 0, 0))
+        screen.blit(text_tspin, [game.x + 10, game.y - 40])
 
     # Draw the info text
     screen.blit(text_hold, [hold_x, hold_y - 30])
@@ -547,19 +701,37 @@ while not done:
 
         # Game over text
         screen.blit(font_big.render("Game Over", True, (255, 125, 0)), [120, 200])
-        screen.blit(font.render(f"Final Score: {game.score}", True, WHITE), [180, 280])
-        screen.blit(font.render("Press ESC for New Game", True, (255, 215, 0)), [150, 320])
+        screen.blit(font.render(f"Final Score: {game.score}", True, (255, 255, 255)), [185, 265])
+        screen.blit(font.render("Press ESC to play again", True, (255, 255, 255)), [170, 300])
 
     # Paused state
-    if game.paused:
+    if game.paused and game.state == "start" and game.game_started:
         # Semi-transparent overlay
         s = pygame.Surface((size[0], size[1]), pygame.SRCALPHA)
-        s.fill((0, 0, 0, 128))
+        s.fill((0, 0, 0, 128))  # Semi-transparent black
         screen.blit(s, (0, 0))
-        screen.blit(font_big.render("PAUSED", True, WHITE), [180, 200])
-        screen.blit(font.render("Press P to continue", True, WHITE), [180, 280])
 
+        # Paused text
+        screen.blit(font_big.render("PAUSED", True, WHITE), [200, 200])
+        screen.blit(font.render("Press P to resume", True, WHITE), [190, 265])
+
+    # Start screen
+    if not game.game_started and game.state == "start":
+        # Semi-transparent overlay
+        s = pygame.Surface((size[0], size[1]), pygame.SRCALPHA)
+        s.fill((0, 0, 0, 180))
+        screen.blit(s, (0, 0))
+
+        # Title and instructions
+        screen.blit(font_big.render("TETRIS", True, (255, 255, 255)), [210, 150])
+        screen.blit(font.render("Press any arrow key to start", True, (255, 255, 255)), [150, 230])
+        screen.blit(font.render("High Score: " + str(game.high_score), True, (255, 255, 255)), [210, 280])
+
+    # Update the screen
     pygame.display.flip()
+
+    # Limit to 30 frames per second
     clock.tick(fps)
 
+# Quit the game
 pygame.quit()
