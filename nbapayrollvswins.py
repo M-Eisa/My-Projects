@@ -88,7 +88,60 @@ data = {
                       'Charlotte Hornets', 'Brooklyn Nets', 'Denver Nuggets', 'LA Clippers', 'New Orleans Pelicans',
                       'Philadelphia 76ers', 'Orlando Magic', 'Utah Jazz', 'Chicago Bulls', 'Indiana Pacers', 'Phoenix Suns',
                       'LA Lakers', 'Sacramento Kings', 'Dallas Mavericks', 'Atlanta Hawks']
+    },
+    '2017-2018': {
+        'team_payroll': [137722926, 137610134, 134534640, 133624374, 123306396, 120814452, 120521249, 119905532, 119773191, 119093010,
+                         118708146, 117382664, 116929373, 116075131, 115284776, 114633844, 110700149, 107543599, 105606838, 105403130,
+                         103126557, 100797386, 99992696, 99587185, 98700258, 95475397, 95271736, 92684083, 90466801, 85440245],
+        'wins': [50, 58, 48, 44, 43, 48, 44, 65, 39, 42, 49, 36, 59, 47, 55, 47, 22, 46, 48, 29,
+                 35, 52, 24, 27, 25, 28, 48, 21, 27, 24],
+        'team_name': ['Cleveland Cavaliers', 'Golden State Warriors', 'Oklahoma City Thunder', 'Miami Heat', 'Washington Wizards',
+                      'New Orleans Pelicans', 'Milwaukee Bucks', 'Houston Rockets', 'Detroit Pistons', 'LA Clippers',
+                      'Portland Trail Blazers', 'Charlotte Hornets', 'Toronto Raptors', 'Minnesota Timberwolves', 'Boston Celtics',
+                      'San Antonio Spurs', 'Memphis Grizzlies', 'Denver Nuggets', 'Utah Jazz', 'New York Knicks',
+                      'LA Lakers', 'Philadelphia 76ers', 'Atlanta Hawks', 'Sacramento Kings', 'Orlando Magic',
+                      'Brooklyn Nets', 'Indiana Pacers', 'Phoenix Suns', 'Chicago Bulls', 'Dallas Mavericks']
+    },
+    '2016-2017': {
+        'team_payroll': [128522489, 119732234, 114756766, 112017779, 110083520, 108599970, 106492988, 104096951, 104016580, 103054004,
+                         102593418, 102354966, 101616451, 101584835, 100740770, 96315163, 96245877, 95596327, 94781848, 93465326,
+                         92522306, 91230089, 90956067, 90279072, 89754590, 84775343, 83836460, 83527580, 82391482, 80138192],
+        'wins': [51, 41, 51, 61, 43, 51, 37, 29, 49, 36, 31, 33, 34, 67, 41, 43, 42, 32, 26, 53,
+                 41, 47, 55, 42, 24, 28, 40, 31, 20, 51],
+        'team_name': ['Cleveland Cavaliers', 'Portland Trail Blazers', 'LA Clippers', 'San Antonio Spurs', 'Memphis Grizzlies',
+                      'Toronto Raptors', 'Detroit Pistons', 'Orlando Magic', 'Washington Wizards', 'Charlotte Hornets',
+                      'New York Knicks', 'Dallas Mavericks', 'New Orleans Pelicans', 'Golden State Warriors', 'Miami Heat',
+                      'Atlanta Hawks', 'Milwaukee Bucks', 'Sacramento Kings', 'LA Lakers', 'Boston Celtics',
+                      'Chicago Bulls', 'Oklahoma City Thunder', 'Houston Rockets', 'Indiana Pacers', 'Phoenix Suns',
+                      'Philadelphia 76ers', 'Denver Nuggets', 'Minnesota Timberwolves', 'Brooklyn Nets', 'Utah Jazz']
+    },
+    '2015-2016': {
+        'team_payroll': [108300458, 97019321, 95708387, 93669566, 87832839, 87504058, 87073838, 85764781, 85055155, 83709371,
+                         83223881, 80258302, 77256014, 77141919, 76860006, 75397067, 74237021, 73843541, 72694352, 72589023,
+                         72287243, 71661760, 71605233, 71591189, 70610560, 68095365, 64583220, 63608425, 63199651, 61685814],
+        'wins': [57, 53, 55, 73, 67, 41, 42, 48, 41, 30, 42, 21, 44, 48, 48, 42, 32, 33, 17, 33,
+                 29, 48, 45, 56, 33, 23, 10, 40, 35, 44],
+        'team_name': ['Cleveland Cavaliers', 'LA Clippers', 'Oklahoma City Thunder', 'Golden State Warriors', 'San Antonio Spurs',
+                      'Houston Rockets', 'Chicago Bulls', 'Miami Heat', 'Washington Wizards', 'New Orleans Pelicans',
+                      'Memphis Grizzlies', 'Brooklyn Nets', 'Detroit Pistons', 'Boston Celtics', 'Charlotte Hornets',
+                      'Dallas Mavericks', 'New York Knicks', 'Milwaukee Bucks', 'LA Lakers', 'Denver Nuggets',
+                      'Minnesota Timberwolves', 'Atlanta Hawks', 'Indiana Pacers', 'Toronto Raptors', 'Sacramento Kings',
+                      'Phoenix Suns', 'Philadelphia 76ers', 'Utah Jazz', 'Orlando Magic', 'Portland Trail Blazers']
+    },
+    '2014-2015': {
+        'team_payroll': [87817289, 85259447, 84820225, 82592827, 81369219, 81317963, 80408520, 80012866, 77546500, 76849302,
+                         75813041, 75158730, 74793526, 73611166, 73379071, 73372974, 70770209, 69936842, 69378954, 67414682,
+                         67410675, 66792937, 62218516, 60847538, 59629210, 58320278, 58018672, 56820307, 54473275, 54355571],
+        'wins': [38, 56, 50, 53, 17, 49, 45, 45, 21, 56, 37, 55, 38, 67, 29, 46, 55, 51, 16, 50,
+                 32, 33, 40, 38, 25, 60, 39, 30, 41, 18],
+        'team_name': ['Brooklyn Nets', 'LA Clippers', 'Dallas Mavericks', 'Cleveland Cavaliers', 'New York Knicks',
+                      'Toronto Raptors', 'Oklahoma City Thunder', 'New Orleans Pelicans', 'LA Lakers', 'Houston Rockets',
+                      'Miami Heat', 'Memphis Grizzlies', 'Indiana Pacers', 'Golden State Warriors', 'Sacramento Kings',
+                      'Washington Wizards', 'San Antonio Spurs', 'Portland Trail Blazers', 'Minnesota Timberwolves', 'Chicago Bulls',
+                      'Detroit Pistons', 'Charlotte Hornets', 'Boston Celtics', 'Utah Jazz', 'Orlando Magic',
+                      'Atlanta Hawks', 'Phoenix Suns', 'Denver Nuggets', 'Milwaukee Bucks', 'Philadelphia 76ers']
     }
+
 }
 
 # Combine data into a single DataFrame
@@ -369,7 +422,7 @@ def update_graph(selected_season, selected_teams, view_mode):
                     marker=dict(
                         size=12,
                         color=colors[i % len(colors)],
-                        line=dict(width=0)  
+                        line=dict(width=0)
                     ),
                     name=season,
                     customdata=np.stack((
@@ -395,7 +448,7 @@ def update_graph(selected_season, selected_teams, view_mode):
                     size=15,
                     color=marker_color,
                     opacity=0.85,
-                    line=dict(width=0)  
+                    line=dict(width=0)
                 ),
                 text=filtered_df['pure_team_name'] if highlight_teams and len(filtered_df) < 15 else None,
                 textposition='top center',
@@ -443,7 +496,7 @@ def update_graph(selected_season, selected_teams, view_mode):
     # Common layout updates
     fig.update_layout(
         font=dict(family="Montserrat, Arial, sans-serif", size=12, color=modern_theme['text_color']),
-        margin=dict(l=40, r=40, t=60, b=40),
+        margin=dict(l=40, r=40, t=80, b=40),
         legend=dict(
             orientation="h",
             yanchor="bottom",
@@ -492,7 +545,7 @@ def update_graph(selected_season, selected_teams, view_mode):
         zeroline=False
     )
 
-    # Format hover templates 
+    # Format hover templates
     fig.update_layout(
         hoverlabel=dict(
             bgcolor=modern_theme['hover_box_bg'],
@@ -501,7 +554,7 @@ def update_graph(selected_season, selected_teams, view_mode):
         )
     )
 
-    # Apply template 
+    # Apply template
     fig.update_layout(template="plotly_white")
 
     return fig
