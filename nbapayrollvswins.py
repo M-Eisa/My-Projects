@@ -172,7 +172,7 @@ for season in df['season'].unique():
 # Calculate overall correlation
 overall_correlation = np.corrcoef(df['team_payroll'], df['wins'])[0, 1]
 
-# Define modern theme styles
+# Define modern theme style
 modern_theme = {
     'graph_bg': '#f8f9fa',
     'paper_bg': 'white',
@@ -304,35 +304,46 @@ app.layout = html.Div([
     ], fluid=True, className="p-4")
 ], style={'background-color': modern_theme['bg_color'], 'min-height': '100vh', 'color': modern_theme['text_color']})
 
+
 # Callback to update the correlation display
 @app.callback(
     Output('correlation-display', 'children'),
-    [Input('season-dropdown', 'value')]
+    [
+        Input('season-dropdown', 'value'),  # Season dropdown
+        Input('team-dropdown', 'value'),    # Team dropdown
+        Input('view-mode', 'value')         # View mode (payroll_wins or efficiency)
+    ]
 )
-def update_correlation(selected_season):
+def update_correlation(selected_season, selected_teams, view_mode):
+    # Filter the data based on the selected season and teams
     if selected_season == 'All':
-        correlation = overall_correlation
-        message = f"Overall correlation between payroll and wins: {correlation:.3f}"
+        filtered_df = df.copy()
     else:
-        correlation = season_correlations[selected_season]
-        message = f"Correlation for {selected_season} season: {correlation:.3f}"
+        filtered_df = df[df['season'] == selected_season]
+
+    # Filter by team(s) if any are selected
+    if selected_teams and len(selected_teams) > 0:
+        filtered_df = filtered_df[filtered_df['pure_team_name'].isin(selected_teams)]
+
+    # Calculate the correlation coefficient for the filtered data
+    correlation = np.corrcoef(filtered_df['team_payroll'], filtered_df['wins'])[0, 1]
 
     # Interpretation message
     if correlation > 0.7:
         interpretation = "Strong positive correlation"
-        icon_color = "#198754"  # success green
+        icon_color = "#198754"
     elif correlation > 0.4:
         interpretation = "Moderate positive correlation"
-        icon_color = "#0dcaf0"  # info blue
+        icon_color = "#0dcaf0"
     elif correlation > 0.1:
         interpretation = "Weak positive correlation"
-        icon_color = "#0d6efd"  # primary blue
+        icon_color = "#0d6efd"  
     elif correlation > -0.1:
         interpretation = "No significant correlation"
-        icon_color = "#6c757d"  # gray
+        icon_color = "#6c757d"
     else:
         interpretation = "Negative correlation"
-        icon_color = "#dc3545"  # danger red
+        icon_color = "#dc3545"
 
     # Add an icon based on correlation strength
     if correlation > 0.4:
@@ -344,8 +355,9 @@ def update_correlation(selected_season):
     else:
         icon = html.I(className="fas fa-arrow-trend-down me-2", style={"color": icon_color})
 
+    # Display the correlation and interpretation
     return html.Div([
-        html.P(message, className="mb-1", style={"font-weight": "400"}),
+        html.P(f"Correlation coefficient: {correlation:.3f}", className="mb-1", style={"font-weight": "400"}),
         html.P([icon, interpretation], className="mb-0", style={"font-weight": "500"})
     ])
 
